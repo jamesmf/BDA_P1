@@ -59,8 +59,11 @@ topicModel = LDA(termDocMat,20)
 topDocMat = as.data.frame(topicModel@gamma)
 
 # get top topics per doc and count them 
-toptopics = as.data.frame(cbind(document = row.names(topDocMat), topic = apply(topDocMat,1,function(x) names(topDocMat)[which(x==max(x))])))
+toptopics = as.data.frame(cbind(document = row.names(topDocMat),
+                  topic = apply(topDocMat,1,function(x) names(topDocMat)[which(x==max(x))[1]])))
 
+# print the number of documents with that topic among its top topics
+table(toptopics$topic)
 
 
 #------------------update------------------------------------
