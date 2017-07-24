@@ -2,6 +2,10 @@
 #install.packages("tm")
 #install.packages("NLP")
 
+#install.packages("openNLP")
+#install.packages("openNLPmodels.en")
+library(openNLP)
+library(openNLPmodels.en)
 library(NLP)
 library(tm)
 #install.packages("topicmodels")
@@ -52,6 +56,8 @@ cleanCorpus = tm_map(intermed,content_transformer(removeNumPunct))
 # get the TDMatrix
 termDocMat = TermDocumentMatrix(cleanCorpus)
 
+
+# ---------------LDA Topic Modeling----------------------
 # use Latent Dirichlet Allocation to determine topics:
 topicModel = LDA(termDocMat,20)
 
@@ -65,6 +71,38 @@ toptopics = as.data.frame(cbind(document = row.names(topDocMat),
 # print the number of documents with that topic among its top topics
 table(toptopics$topic)
 
+
+# ---------------Get top 25, top 5 documents-----------------
+
+# subset to the longest documents
+asDF = data.frame(text=unlist(sapply(cleanCorpus, `[`, "content")), 
+                  stringsAsFactors=F)
+asDF$lengths = nchar(asDF$text)
+
+# top 25 longets emails in a dataframe
+asDFTrunc = asDF[with(asDF,order(-lengths)),][1:26,1]
+
+
+#----------------work through top 25 info --------------
+
+top25Corp = VCorpus(VectorSource(asDFTrunc))
+intermed = tm_map(top25Corp,removeWords,myStopwords)
+top25Corp = tm_map(intermed,content_transformer(removeNumPunct))
+top25TM = removeSparseTerms(TermDocumentMatrix(top25Corp),sparse = 0.75)
+
+distMat = dist(scale(top25TM))
+fit25 <- hclust(distMat,method = "ward.D2")
+plot(fit25)
+
+wordcloud(top25Corp[1])
+wordcloud(top25Corp[2])
+wordcloud(top25Corp[3])
+wordcloud(top25Corp[4])
+wordcloud(top25Corp[5])
+
+
+#----------LONGEST SENTENCES-------------------
+length(gregexpr('[[:alnum:] ][.!?]', top25Corp)[[1]][1])
 
 #------------------update------------------------------------
 #the functions I've tried, sorry didn't fit the variable name
