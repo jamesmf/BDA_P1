@@ -1,8 +1,11 @@
 # install tm - uncomment if you haven't already installed
 #install.packages("tm")
+#install.packages("NLP")
 
 library(NLP)
 library(tm)
+#install.packages("topicmodels")
+library(topicmodels)
 #install.packages("stringr")
 library(stringr)
 #install.packages("ggplot2")
@@ -13,6 +16,8 @@ library(reshape)
 #install.packages("RColorBrewer")
 library(RColorBrewer)
 library(wordcloud)
+#install.packages("dplyr")
+#library(dplyr)
 
 # use tm
 library(tm)
@@ -46,6 +51,15 @@ cleanCorpus = tm_map(intermed,content_transformer(removeNumPunct))
 
 # get the TDMatrix
 termDocMat = TermDocumentMatrix(cleanCorpus)
+
+# use Latent Dirichlet Allocation to determine topics:
+topicModel = LDA(termDocMat,20)
+
+# get topic-document matrix
+topDocMat = as.data.frame(topicModel@gamma)
+
+# get top topics per doc and count them 
+toptopics = as.data.frame(cbind(document = row.names(topDocMat), topic = apply(topDocMat,1,function(x) names(topDocMat)[which(x==max(x))])))
 
 
 
@@ -138,7 +152,7 @@ corpusTDM3
 freq.term=findFreqTerms(removeSparse,lowfreq = 5)
 freq.term
 
-#Find words associated with “america”
+#Find words associated with ???america???
 findAssocs(corpusTDM2, "america", 0.25)
 
 freq.term3=findFreqTerms(corpusTDM2, lowfreq = 5)
