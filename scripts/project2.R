@@ -1,9 +1,11 @@
 # install tm - uncomment if you haven't already installed
 #install.packages("tm")
 #install.packages("NLP")
-
+#install.packages("ggplot2")
+library(ggplot2)
 #install.packages("openNLP")
 #install.packages("openNLPmodels.en")
+#install.packages("openNLPmodels.en", repos = "http://datacube.wu.ac.at/", type = "source")
 library(openNLP)
 library(openNLPmodels.en)
 library(NLP)
@@ -12,8 +14,7 @@ library(tm)
 library(topicmodels)
 #install.packages("stringr")
 library(stringr)
-#install.packages("ggplot2")
-library(ggplot2)
+
 #install.packages("reshape")
 library(reshape)
 #install.packages("wordcloud")
@@ -75,7 +76,7 @@ table(toptopics$topic)
 # ---------------Get top 25, top 5 documents-----------------
 
 # subset to the longest documents
-asDF = data.frame(text=unlist(sapply(cleanCorpus, `[`, "content")), 
+asDF = data.frame(text=unlist(sapply(corpus, `[`, "content")), 
                   stringsAsFactors=F)
 asDF$lengths = nchar(asDF$text)
 
@@ -102,8 +103,33 @@ wordcloud(top25Corp[5])
 
 
 #----------LONGEST SENTENCES-------------------
-length(gregexpr('[[:alnum:] ][.!?]', top25Corp)[[1]][1])
+convert_text_to_sentences <- function(text, lang = "en") {
+  sentence_token_annotator <- Maxent_Sent_Token_Annotator(language = lang)
+  # Convert text to class String from package NLP
+  text <- as.String(text)
+  # Sentence boundaries in text
+  sentence.boundaries <- annotate(text, sentence_token_annotator)
+  # Extract sentences
+  sentences <- text[sentence.boundaries]
+  # return sentences
+  return(sentences)
+}
+reshape_corpus <- function(current.corpus, FUN, ...) {
+  # Extract the text from each document in the corpus and put into a list
+  text <- lapply(current.corpus, content)
+  # Basically convert the text
+  docs <- lapply(text, FUN, ...)
+  docs <- as.vector(unlist(docs))
+  # Create a new corpus structure and return it
+  new.corpus <- Corpus(VectorSource(docs))
+  return(new.corpus)
+}
+sentenceCorp = reshape_corpus(intermed,convert_text_to_sentences)
+cleanSentenceCorp = tm_map(sentenceCorp,content_transformer(removeNumPunct))
+lens = sapply(cleanSentenceCorp,nchar)
+ldf = as.data.frame(table(lens))
 
+# get sentence lengths
 #------------------update------------------------------------
 #the functions I've tried, sorry didn't fit the variable name
 
